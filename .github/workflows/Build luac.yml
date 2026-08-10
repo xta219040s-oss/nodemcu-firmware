@@ -1,23 +1,17 @@
 name: Build luac.cross
 
 on:
-  push:
-    tags:
-      - '3.*-release_*'
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Tag name (e.g., 3.0-release_test)'
+        description: 'Version tag'
         required: true
-        type: string
-        default: '3.0-release_manual'
+        default: '3.0-test'
 
 jobs:
-
-  build_luac_cross_win:
-
+  build:
     runs-on: windows-latest
-
+    
     steps:
     - uses: actions/checkout@v4
       with:
@@ -25,25 +19,15 @@ jobs:
         
     - name: Build luac.cross.exe
       run: |
-        cd msvc
-        "%programfiles(x86)%\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\msbuild.exe" /p:Configuration=Release /p:Platform=x64
-        move luac-cross\x64\Release\luac.cross.exe ..
+        cd nodemcu-firmware\msvc
+        echo "Building in: %CD%"
+        dir
+        msbuild hosttools.sln /p:Configuration=Release /p:Platform=x64
+        copy luac-cross\x64\Release\luac.cross.exe ..
       shell: cmd
       
-    - name: Upload luac.cross as artifact
-      if: ${{ success() }}
+    - name: Upload luac.cross
       uses: actions/upload-artifact@v4
       with:
-        name: luac.cross_${{ github.event.inputs.tag_name || 'latest' }}_x64_float_Lua51
-        path: luac.cross.exe
-- name: Build luac.cross.exe
-  run: |
-    echo "=== Current directory ==="
-    echo %CD%
-    echo "=== List files ==="
-    dir
-    echo "=== List parent directory ==="
-    dir ..\
-    echo "=== Search for msvc ==="
-    dir /s /ad | findstr msvc
-  shell: cmd
+        name: luac.cross_${{ github.event.inputs.tag_name }}_x64_float_Lua51
+        path: nodemcu-firmware\luac.cross.exe
