@@ -1,6 +1,35 @@
 name: Build luac.cross
 
 on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Version tag'
+        required: true
+        default: '3.0-test'
+
+jobs:
+  build:
+    runs-on: windows-2019
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: Build luac.cross.exe
+      run: |
+        "%programfiles(x86)%\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\msbuild.exe" msvc\hosttools.sln /p:Configuration=Release /p:Platform=x64
+        copy msvc\luac-cross\x64\Release\luac.cross.exe luac.cross.exe
+      shell: cmd
+
+    - name: Upload luac.cross
+      uses: actions/upload-artifact@v4
+      with:
+        name: luac.cross_${{ github.event.inputs.tag_name }}_x64_float_Lua51
+        path: luac.cross.exename: Build luac.cross
+
+on:
   push:
     tags:
       - '3.*-release_*'
