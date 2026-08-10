@@ -23,10 +23,17 @@ jobs:
       shell: bash
       run: |
         mkdir -p bin
-        cp msvc/luac-cross/x64/Release/luac-cross.exe bin/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
+        # Проверяем стандартное поведение MSBuild (исправленный путь без дублирования luac-cross)
+        if [ -f "msvc/x64/Release/luac-cross.exe" ]; then
+          cp msvc/x64/Release/luac-cross.exe bin/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
+        elif [ -f "msvc/luac-cross/x64/Release/luac-cross.exe" ]; then
+          cp msvc/luac-cross/x64/Release/luac-cross.exe bin/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
+        else
+          echo "Error: luac-cross.exe not found!" && exit 1
+        fi
 
     - name: Upload Windows Executable
       uses: actions/upload-artifact@v4
       with:
         name: luac_windows_x64
-        path: bin
+        path: bin/
