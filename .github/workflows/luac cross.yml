@@ -6,38 +6,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout NodeMCU firmware
-        uses: actions/checkout@v4
-        with:
-          repository: nodemcu/nodemcu-firmware
-          path: nodemcu-firmware
-
-      - name: Build luac.cross using Docker
-        run: |
-          docker run --rm \
-            -v $(pwd)/nodemcu-firmware:/opt/nodemcu-firmware \
-            -w /opt/nodemcu-firmware \
-            marcelstoer/nodemcu-build \
-            make -C app/lua/luac_crossname: Build luac.cross
-
-on:
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout NodeMCU firmware
-        uses: actions/checkout@v4
-        with:
-          repository: nodemcu/nodemcu-firmware
-          path: nodemcu-firmware
-
-      - name: Build with official script
-        working-directory: nodemcu-firmware
+      - name: Build with official Docker image
         run: |
-          chmod +x tools/build.sh
-          ./tools/build.sh -c luac.cross
+          docker run --rm \
+            -v $(pwd):/opt/nodemcu-firmware \
+            -w /opt/nodemcu-firmware \
+            marcelstoer/nodemcu-build \
+            /bin/bash -c "make -C tools luac.cross"
