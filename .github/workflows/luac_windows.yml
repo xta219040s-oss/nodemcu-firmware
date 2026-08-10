@@ -8,7 +8,8 @@ jobs:
     runs-on: windows-2022
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout Repository
+      uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -17,20 +18,13 @@ jobs:
 
     - name: Build luac.cross for Windows
       run: |
-        msbuild msvc/luac-cross/luac-cross.vcxproj /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143
+        msbuild msvc/luac-cross/luac-cross.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0
 
     - name: Rename and Prepare Artifact
       shell: bash
       run: |
         mkdir -p bin
-        # Проверяем стандартное поведение MSBuild (исправленный путь без дублирования luac-cross)
-        if [ -f "msvc/x64/Release/luac-cross.exe" ]; then
-          cp msvc/x64/Release/luac-cross.exe bin/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
-        elif [ -f "msvc/luac-cross/x64/Release/luac-cross.exe" ]; then
-          cp msvc/luac-cross/x64/Release/luac-cross.exe bin/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
-        else
-          echo "Error: luac-cross.exe not found!" && exit 1
-        fi
+        cp msvc/luac-cross/x64/Release/luac-cross.exe bin/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
 
     - name: Upload Windows Executable
       uses: actions/upload-artifact@v4
