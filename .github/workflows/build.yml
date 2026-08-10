@@ -27,13 +27,13 @@ jobs:
 
     - name: Build luac.cross for Windows
       run: |
-        # Очищаем временные объекты в подпапке кросс-компилятора
+        # Очищаем временные объекты Linux-сборки в папке luac_cross
         make -C app/lua/luac_cross clean
         
-        # Собираем exe с помощью MinGW, передавая его как основной компилятор
-        make -C app/lua/luac_cross CC=x86_64-w64-mingw32-gcc
+        # Передаем компилятор MinGW в переменную HOSTCC для кросс-компиляции .exe
+        make -C app/lua/luac_cross HOSTCC=x86_64-w64-mingw32-gcc CC=x86_64-w64-mingw32-gcc
         
-        # Переименовываем и переносим готовый файл в целевую директорию bin
+        # Переименовываем и переносим готовый .exe в целевую директорию bin
         mv app/lua/luac_cross/luac.cross.exe bin/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
 
     - name: Upload firmware and luac
