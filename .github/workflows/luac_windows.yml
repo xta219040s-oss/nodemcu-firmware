@@ -1,51 +1,65 @@
-name: Build Windows Luac.Cross
+name: Build luac.cross for ESP8266 (Windows)
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Возможность запуска вручную
 
 jobs:
   build-luac:
-    runs-on: windows-2022
-
+    runs-on: windows-latest  # Windows Server 2022 x64
+    
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-      with:
-        submodules: true
+      # 1. Клонируем репозиторий NodeMCU
+      - name: Checkout NodeMCU firmware
+        uses: actions/checkout@v4
+        with:
+          repository: nodemcu/nodemcu-firmware
+          ref: master  # или конкретный тег, например '3.0.0-release'
+          path: nodemcu-firmware
 
-    - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v2
+      # 2. Устанавливаем зависимости для сборки под Windows
+      - name: Install build tools
+        run: |
+          choco install mingw -y
+          choco install make -y
+          echo "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin" >> $env:GITHUB_PATH
+          echo "C:\ProgramData\chocolatey\bin" >> $env:GITHUB_PATH
 
-    # Установка и интеграция системных заголовочных файлов (исправляет ошибку stddef.h)
-    - name: Integrate vcpkg (Fix C1083 / Standard Headers)
-      run: |
-        vcpkg integrate install
+      # 3. Настраиваем окружение для MinGW
+      - name: Setup MinGW environment
+        run: |
+          # Проверяем, что gcc доступен
+          gcc --version
+          make --version
 
-    - name: Build luac.cross for Windows
-      run: |
-        msbuild msvc/luac-cross/luac-cross.vcxproj `
-          /t:Rebuild `
-          /p:Configuration=Release `
-          /p:Platform=x64 `
-          /p:PlatformToolset=v143 `
-          /p:WindowsTargetPlatformVersion=10.0 `
-          /p:AdditionalIncludeDirectories="%WindowsSDK_IncludePath%ucrt"
+      # 4. Собираем luac.cross
+      - name: Build luac.cross
+        working-directory: nodemcu-firmware
+        run: |
+          # Сборка кросс-компилятора для Windows x64
+          cd tools
+          make luac.cross
+          # Переименовываем для понятности
+          cp luac.cross luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
 
-    - name: Rename and Prepare Artifact
-      shell: bash
-      run: |
-        mkdir -p bin
-        # Проверка и копирование скомпилированного файла на основе структуры репозитория nodemcu
-        if [ -f "msvc/luac-cross/x64/Release/luac-cross.exe" ]; then
-          cp msvc/luac-cross/x64/Release/luac-cross.exe bin/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
-        elif [ -f "msvc/x64/Release/luac-cross.exe" ]; then
-          cp msvc/x64/Release/luac-cross.exe bin/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
-        else
-          echo "Error: luac-cross.exe not found в директориях сборки!" && exit 1
-        fi
+      # 5. Загружаем артефакт (готовый .exe)
+      - name: Upload luac.cross artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: luac.cross-windows-x64
+          path: nodemcu-firmware/tools/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
+          retention-days: 30
 
-    - name: Upload Windows Executable
-      uses: actions/upload-artifact@v4
-      with:
-        name: luac_windows_x64
-        path: bin/
+      # 6. (Опционально) Создаем релиз с этим файлом
+      - name: Create Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: nodemcu-firmware/tools/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
