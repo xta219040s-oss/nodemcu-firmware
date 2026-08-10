@@ -6,7 +6,7 @@ on:
       tag_name:
         description: 'Version tag'
         required: true
-        default: '3.0-test'
+        default: '3.0.0.0-releas'
 
 jobs:
   build:
@@ -30,4 +30,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: luac.cross_${{ github.event.inputs.tag_name }}_x64_float_Lua51
-        path: luac.cross.exe
+        path: luac.cross_${{ github.event.inputs.tag_name }}_x64_float_Lua51.exe
