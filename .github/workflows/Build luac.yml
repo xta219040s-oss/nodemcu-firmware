@@ -10,16 +10,19 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2019  # VS 2019 с поддержкой v141_xp
+    runs-on: windows-2022
 
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: true
 
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
     - name: Build luac.cross.exe
       run: |
-        "%programfiles(x86)%\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\msbuild.exe" msvc\hosttools.sln /m /p:Configuration=Release /p:Platform=x64 /p:BuildInParallel=true
+        msbuild msvc\hosttools.sln /m /p:Configuration=Release /p:Platform=x64 /p:BuildInParallel=true
         copy msvc\luac-cross\x64\Release\luac.cross.exe luac.cross.exe
       shell: cmd
 
