@@ -14,41 +14,31 @@ jobs:
       with:
         submodules: true
 
-    - name: Set up Python
-      run: pip install pyserial
-
-    - name: Install System Dependencies
+    - name: Install dependencies
       run: |
+        pip install pyserial
         sudo apt update
         sudo apt install -y srecord gcc-mingw-w64-x86-64
 
-    - name: Build NodeMCU firmware
+    - name: Build firmware
       run: |
         make clean
         make
 
     - name: Build luac.cross for Windows
       run: |
-        # Очищаем объектные файлы перед кросс-компиляцией, чтобы избежать конфликта архитектур
-        make clean
+        # Очищаем временные объекты в подпапке кросс-компилятора
+        make -C app/lua/luac_cross clean
         
-        # Собираем цель luac.cross из корня репозитория, используя MinGW компилятор
-        make luac.cross CC=x86_64-w64-mingw32-gcc HostCC=x86_64-w64-mingw32-gcc
+        # Собираем exe с помощью MinGW, передавая его как основной компилятор
+        make -C app/lua/luac_cross CC=x86_64-w64-mingw32-gcc
         
-        # Ищем получившийся файл, игнорируя директорию msvc
-        EXE_PATH=$(find . -name "luac.cross.exe" -not -path "*/msvc/*" | head -n 1)
-        
-        if [ -z "$EXE_PATH" ]; then
-          echo "Error: luac.cross.exe not found!"
-          exit 1
-        fi
-        
-        echo "Found luac.cross.exe at $EXE_PATH, moving to bin..."
-        mv "$EXE_PATH" bin/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
+        # Переименовываем и переносим готовый файл в целевую директорию bin
+        mv app/lua/luac_cross/luac.cross.exe bin/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
 
-    - name: Upload artifacts
+    - name: Upload firmware and luac
       if: ${{ success() }}
       uses: actions/upload-artifact@v4
       with:
-        name: firmware_and_luac
+        name: firmware_and_luac.cross
         path: bin
