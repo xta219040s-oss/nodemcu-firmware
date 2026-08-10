@@ -17,10 +17,12 @@ jobs:
       with:
         submodules: true
         
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+        
     - name: Build luac.cross.exe
       run: |
-        cd nodemcu-firmware\msvc
-        echo "Building in: %CD%"
+        cd msvc
         dir
         msbuild hosttools.sln /p:Configuration=Release /p:Platform=x64
         copy luac-cross\x64\Release\luac.cross.exe ..
@@ -30,4 +32,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: luac.cross_${{ github.event.inputs.tag_name }}_x64_float_Lua51
-        path: nodemcu-firmware\luac.cross.exe
+        path: luac.cross.exe
