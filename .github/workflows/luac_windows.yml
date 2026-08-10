@@ -1,4 +1,38 @@
-name: Build luac.cross for ESP8266 (Windows)
+name: Build luac.cross with CMake (Windows)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: nodemcu/nodemcu-firmware
+          path: nodemcu-firmware
+
+      # Устанавливаем MSVC и CMake (уже есть на windows-latest)
+      - name: Configure CMake
+        working-directory: nodemcu-firmware
+        run: |
+          mkdir build
+          cd build
+          cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build luac.cross
+        working-directory: nodemcu-firmware/build
+        run: |
+          cmake --build . --config Release --target luac.cross
+          # Копируем в корень tools
+          cp Release/luac.cross.exe ../tools/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: luac.cross-cmake
+          path: nodemcu-firmware/tools/luac.cross_*.exename: Build luac.cross for ESP8266 (Windows)
 
 on:
   push:
