@@ -8,7 +8,7 @@
 // FLASH_512K, FLASH_1M, FLASH_2M, FLASH_4M, FLASH_8M, FLASH_16M.
 
 #define FLASH_AUTOSIZE
-//#define FLASH_16M
+//#define FLASH_4M
 
 
 // The firmware now selects a baudrate of 115,200 by default, but the driver
@@ -89,8 +89,6 @@
 // through to the interactive prompt.
 
 //#define LUA_INIT_STRING "pcall(function() node.flashindex'_init'() end)"
-//my LFS init
-//#define LUA_INIT_STRING "pcall(node.flashindex('_init'))"
 
 
 // NodeMCU supports two file systems: SPIFFS and FATFS, the first is available
