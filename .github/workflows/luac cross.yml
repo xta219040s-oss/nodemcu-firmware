@@ -14,61 +14,8 @@ jobs:
           repository: nodemcu/nodemcu-firmware
           path: nodemcu-firmware
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-mingw-w64-x86-64 make
-
-      - name: Build luac.cross for Windows
+      - name: Build with official script
         working-directory: nodemcu-firmware
         run: |
-          # Настройка на float
-          sed -i 's/#define LUA_NUMBER_INTEGRAL.*/#define LUA_NUMBER_FLOAT 1/' app/include/user_config.h
-          
-          # Сборка через Makefile (кросс-компиляция для Windows)
-          make clean
-          make CC=x86_64-w64-mingw32-gcc luac.cross
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: luac.cross.exe
-          path: nodemcu-firmware/tools/luac.crossname: Build luac.cross
-
-on:
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: windows-latest
-    
-    steps:
-      - name: Checkout NodeMCU firmware
-        uses: actions/checkout@v4
-        with:
-          repository: nodemcu/nodemcu-firmware
-          path: nodemcu-firmware
-
-      - name: Setup MSYS2
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          install: |
-            make
-            gcc
-            mingw-w64-x86_64-gcc
-
-      - name: Build luac.cross
-        shell: msys2 {0}
-        working-directory: nodemcu-firmware
-        run: |
-          # Настройка на float (для вашего варианта)
-          sed -i 's/#define LUA_NUMBER_INTEGRAL.*/#define LUA_NUMBER_FLOAT 1/' app/include/user_config.h
-          # Сборка
-          make luac.cross
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: luac.cross-windows-x64-float
-          path: nodemcu-firmware/tools/luac.cross
+          chmod +x tools/build.sh
+          ./tools/build.sh -c luac.cross
