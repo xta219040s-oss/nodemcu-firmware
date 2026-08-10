@@ -5,20 +5,34 @@ on: push
 jobs:
   build:
     runs-on: windows-latest
+    
     steps:
       - name: Checkout NodeMCU firmware
         uses: actions/checkout@v4
         with:
           repository: nodemcu/nodemcu-firmware
+          path: nodemcu-firmware
 
-      - name: Build luac.cross in WSL
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: |
+            make
+            gcc
+            mingw-w64-x86_64-gcc
+
+      - name: Build luac.cross
+        shell: msys2 {0}
+        working-directory: nodemcu-firmware
         run: |
-          wsl sudo apt update
-          wsl sudo apt install -y make gcc
-          wsl make luac.cross
+          # Настройка на float (для вашего варианта)
+          sed -i 's/#define LUA_NUMBER_INTEGRAL.*/#define LUA_NUMBER_FLOAT 1/' app/include/user_config.h
+          # Сборка
+          make luac.cross
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: luac.cross
-          path: luac.cross
+          name: luac.cross-windows-x64-float
+          path: nodemcu-firmware/tools/luac.cross
