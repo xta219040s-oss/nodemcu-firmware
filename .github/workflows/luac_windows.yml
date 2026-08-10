@@ -17,13 +17,13 @@ jobs:
 
     - name: Build luac.cross for Windows
       run: |
-        msbuild msvc/luac-cross/luac-cross.vcxproj /p:Configuration=Release /p:Platform=x64
+        msbuild msvc/luac-cross/luac-cross.vcxproj /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v144
 
     - name: Rename and Prepare Artifact
       shell: bash
       run: |
         mkdir -p bin
-        # Находим скомпилированный .exe в выходной папке MSVC и даем ему твое имя
+        # Копируем скомпилированный файл из директории сборки MSVC и переименовываем
         cp msvc/luac-cross/x64/Release/luac-cross.exe bin/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
 
     - name: Upload Windows Executable
