@@ -23,7 +23,7 @@ jobs:
     - name: Build luac.cross.exe
       run: |
         msbuild msvc\hosttools.sln /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0 /p:BuildInParallel=true
-        copy msvc\luac-cross\x64\Release\luac.cross.exe luac.cross.exe
+        copy msvc\luac-cross\x64\Release\luac.cross_${{ github.event.inputs.tag_name }}_x64_float_Lua51.exe luac.cross_${{ github.event.inputs.tag_name }}_x64_float_Lua51.exe
       shell: cmd
 
     - name: Upload luac.cross
