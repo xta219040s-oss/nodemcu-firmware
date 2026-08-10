@@ -13,32 +13,19 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
-
-    - name: Install dependencies
-      run: |
-        pip install pyserial
-        sudo apt update
-        sudo apt install -y srecord gcc-mingw-w64-x86-64
-
+        
+    - run: pip install pyserial
+    
+    - run: sudo apt install srecord
+    
     - name: Build firmware
       run: |
         make clean
         make
-
-    - name: Build luac.cross for Windows
-      run: |
-        # Очищаем временные объекты Linux-сборки в папке luac_cross
-        make -C app/lua/luac_cross clean
         
-        # Передаем компилятор MinGW в переменную HOSTCC для кросс-компиляции .exe
-        make -C app/lua/luac_cross HOSTCC=x86_64-w64-mingw32-gcc CC=x86_64-w64-mingw32-gcc
-        
-        # Переименовываем и переносим готовый .exe в целевую директорию bin
-        mv app/lua/luac_cross/luac.cross.exe bin/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
-
-    - name: Upload firmware and luac
+    - name: Upload firmware
       if: ${{ success() }}
       uses: actions/upload-artifact@v4
       with:
-        name: firmware_and_luac.cross
+        name: firmware_51_float
         path: bin
