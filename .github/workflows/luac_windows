@@ -1,0 +1,33 @@
+name: Build Windows Luac.Cross
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-luac:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Build luac.cross for Windows
+      run: |
+        msbuild msvc/luac-cross/luac-cross.vcxproj /p:Configuration=Release /p:Platform=x64
+
+    - name: Rename and Prepare Artifact
+      shell: bash
+      run: |
+        mkdir -p bin
+        # Находим скомпилированный .exe в выходной папке MSVC и даем ему твое имя
+        cp msvc/luac-cross/x64/Release/luac-cross.exe bin/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
+
+    - name: Upload Windows Executable
+      uses: actions/upload-artifact@v4
+      with:
+        name: luac_windows_x64
+        path: bin
