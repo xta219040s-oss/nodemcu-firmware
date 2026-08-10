@@ -1,41 +1,24 @@
-name: Build luac.cross
-
-on:
-  push:
-    tags:
-      - '3.*-release_*'
-  workflow_dispatch:
-    inputs:
-      tag_name:
-        description: 'Tag name (e.g., 3.0-release_test)'
-        required: true
-        type: string
-        default: '3.0-release_manual'
-
 jobs:
-
-  build_luac_cross_win:
-
-    runs-on: windows-2019
-
+  build-windows:
+    runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-        
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
-      
-    - name: Build luac.cross.exe
-      run: |
-        cd msvc
-        msbuild.exe /p:Configuration=Release /p:Platform=x64
-        move luac-cross\x64\Release\luac.cross.exe ..
-      shell: cmd
-      
-    - name: Upload luac.cross as artifact
-      if: ${{ success() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: luac.cross_${{ github.event.inputs.tag_name || github.ref_name }}_x64_float_Lua51
-        path: luac.cross.exe
+      # ... сборка ...
+      - uses: actions/upload-artifact@v4
+        with:
+          name: luac.cross-win-x64
+          path: luac.cross.exe
+  
+  build-linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Build
+        run: |
+          cd src
+          make luac.cross
+      - uses: actions/upload-artifact@v4
+        with:
+          name: luac.cross-linux-x64
+          path: src/luac.cross
