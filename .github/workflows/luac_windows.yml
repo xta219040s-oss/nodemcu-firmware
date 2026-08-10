@@ -1,99 +1,24 @@
-name: Build luac.cross with CMake (Windows)
+name: Build luac.cross
 
-on:
-  workflow_dispatch:
+on: push
 
 jobs:
   build:
     runs-on: windows-latest
-    
     steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: nodemcu/nodemcu-firmware
-          path: nodemcu-firmware
-
-      # Устанавливаем MSVC и CMake (уже есть на windows-latest)
-      - name: Configure CMake
-        working-directory: nodemcu-firmware
-        run: |
-          mkdir build
-          cd build
-          cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build luac.cross
-        working-directory: nodemcu-firmware/build
-        run: |
-          cmake --build . --config Release --target luac.cross
-          # Копируем в корень tools
-          cp Release/luac.cross.exe ../tools/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: luac.cross-cmake
-          path: nodemcu-firmware/tools/luac.cross_*.exename: Build luac.cross for ESP8266 (Windows)
-
-on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:  # Возможность запуска вручную
-
-jobs:
-  build-luac:
-    runs-on: windows-latest  # Windows Server 2022 x64
-    
-    steps:
-      # 1. Клонируем репозиторий NodeMCU
       - name: Checkout NodeMCU firmware
         uses: actions/checkout@v4
         with:
           repository: nodemcu/nodemcu-firmware
-          ref: master  # или конкретный тег, например '3.0.0-release'
-          path: nodemcu-firmware
 
-      # 2. Устанавливаем зависимости для сборки под Windows
-      - name: Install build tools
+      - name: Build luac.cross in WSL
         run: |
-          choco install mingw -y
-          choco install make -y
-          echo "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin" >> $env:GITHUB_PATH
-          echo "C:\ProgramData\chocolatey\bin" >> $env:GITHUB_PATH
+          wsl sudo apt update
+          wsl sudo apt install -y make gcc
+          wsl make luac.cross
 
-      # 3. Настраиваем окружение для MinGW
-      - name: Setup MinGW environment
-        run: |
-          # Проверяем, что gcc доступен
-          gcc --version
-          make --version
-
-      # 4. Собираем luac.cross
-      - name: Build luac.cross
-        working-directory: nodemcu-firmware
-        run: |
-          # Сборка кросс-компилятора для Windows x64
-          cd tools
-          make luac.cross
-          # Переименовываем для понятности
-          cp luac.cross luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
-
-      # 5. Загружаем артефакт (готовый .exe)
-      - name: Upload luac.cross artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: luac.cross-windows-x64
-          path: nodemcu-firmware/tools/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
-          retention-days: 30
-
-      # 6. (Опционально) Создаем релиз с этим файлом
-      - name: Create Release
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: nodemcu-firmware/tools/luac.cross_3.0.0-release_20240225_x64_float_Lua51.exe
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: luac.cross
+          path: luac.cross
